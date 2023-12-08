@@ -1,63 +1,58 @@
 import cv2
-import datetime
+import time
+# import datetime
+import requests
 import numpy as np
-import urllib.request
 from ultralytics import YOLO
 
 url = 'http://192.168.31.36/stream'
 led_on = "http://192.168.31.36/led_on"
 led_off = "http://192.168.31.36/led_off"
 
-video_cap = cv2.VideoCapture("./test_vdo.mp4")
+isled_on = False
+
 model = YOLO("yolov5nu.pt")
 
-mode = 0  # 0 image from url, 1 test video
+while (1 + 1) == 2:
+    start_time = time.time()
+    # start = datetime.datetime.now()
 
-# while((1 + 1) == 2):
-#     imageURL = urllib.request.urlopen(url)
-#     imageByte = np.asarray(bytearray(imageURL.read()), dtype=np.uint8)
-#     imgProc = cv2.imdecode(imageByte, -1)
-#     results = model(imgProc)[0]
-#
-#     print(results)
-#
-#     cv2.imshow('Test Image Proc', imgProc)
-#     if cv2.waitKey(1) & 0xFF == ord('q'):
-#         break
+    imageURL = requests.get(url)
+    imageArray = np.frombuffer(bytearray(imageURL.content), dtype=np.uint8)
+    imgDecode = cv2.imdecode(imageArray, cv2.IMREAD_COLOR)
 
-while((1 + 1) == 2):
-    start = datetime.datetime.now()
+    detactions = model(imgDecode)[0]
 
-    if mode != 0:
-        ret, imgProc = video_cap.read()
-        detactions = model(imgProc)[0]
+    # for data in detactions.boxes.data.tolist():
+    #     confidencs = data[4]
+    #
+    #     if float(confidencs) < 0.2 or float(data[5]) != 0.0:
+    #         continue
+    #
+    #     xmin, ymin, xman, ymax = int(data[0]), int(data[1]), int(data[2]), int(data[3])
+    #     cv2.rectangle(imgDecode, (xmin, ymin), (xman, ymax), (0, 0, 255), 2)
+
+    if len(detactions.boxes.data.tolist()) > 0 and detactions.boxes.data.tolist()[0][5] == 0.0:
+        if not isled_on:
+            requests.get(led_on)
+            isled_on = True
     else:
-        imageURL = urllib.request.urlopen(url)
-        imageByte = np.asarray(bytearray(imageURL.read()), dtype=np.uint8)
-        imgProc = cv2.imdecode(imageByte, -1)
-        detactions = model(imgProc)[0]
+        if isled_on:
+            requests.get(led_off)
+            isled_on = False
 
-    for data in detactions.boxes.data.tolist():
-        confidencs = data[4]
+    # end = datetime.datetime.now()
+    # total = (end - start).total_seconds()
+    # print(f"Time to process 1 frame: {total * 1000:.0f} millisec.")
+    time.sleep(max(0, 1 - (time.time() - start_time)))
+    # fps = f"FPS: {1 / total:.2f}"
+    # print(fps)
+    #
+    # cv2.putText(imgDecode, fps, (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 8)
 
-        if float(confidencs) < 0.8:
-            continue
+    # cv2.imshow("Detect human.exe", imgDecode)
 
-        xmin, ymin, xman, ymax = int(data[0]), int(data[1]), int(data[2]), int(data[3])
-        cv2.rectangle(imgProc, (xmin, ymin), (xman, ymax), (0, 0, 255), 2)
-    
-    end = datetime.datetime.now()
-    total = (end - start).total_seconds()
-    print(f"Time to process 1 frame: {total * 1000:.0f} millisec.")
+    # if cv2.waitKey(1) & 0xFF == ord('q'):
+    #     break
 
-    fps = f"FPS: {1/total:.2f}"
-    print(fps)
-    
-    cv2.putText(imgProc, fps, (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 8)
-
-    cv2.imshow("Detect human.exe", imgProc)
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
-    
-video_cap.release()
-cv2.destroyAllWindows()
+# cv2.destroyAllWindows()
