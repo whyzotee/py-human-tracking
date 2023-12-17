@@ -16,7 +16,7 @@ while (1 + 1) == 2:
     imageArray = np.frombuffer(bytearray(imageURL.content), dtype=np.uint8)
     imgDecode = cv2.imdecode(imageArray, cv2.IMREAD_COLOR)
 
-    results = model.predict(source=imgDecode, imgsz=320)[0]
+    results = model.predict(source=imgDecode, imgsz=256)[0]
     data = results.boxes.data.tolist()
 
     if len(data) > 0 and data[0][5] == 0.0:
