@@ -1,10 +1,9 @@
 import cv2
-import torch
 import RPi.GPIO as GPIO
+from ultralytics import YOLO
 
 relay = 37
-# model = YOLO("yolov5nu.pt")
-model = torch.hub.load('ultralytics/yolov5:v6.0', 'yolov5n', pretrained=False)
+model = YOLO("yolov5nu.pt")
 cap = cv2.VideoCapture('http://192.168.4.1/stream')
 
 GPIO.setmode(GPIO.BOARD)
