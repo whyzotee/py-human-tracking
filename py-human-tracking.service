@@ -1,0 +1,8 @@
+[Unit]
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/python3 /usr/local/bin/my-python-script.py
+
+[Install]
+WantedBy=default.target
