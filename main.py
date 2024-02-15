@@ -1,14 +1,20 @@
 import cv2
 import datetime
+import requests
+import numpy as np
 from ultralytics import YOLO
 
 isled_on = False
 model = YOLO("yolov5nu.pt")
-cap = cv2.VideoCapture('http://192.168.4.1/stream')
+# cap = cv2.VideoCapture('http://192.168.4.1/stream')
+url = 'http://192.168.4.1/snapshot'
 
-while cap.isOpened():
+while True:
     start = datetime.datetime.now()
-    ret, imgDecode = cap.read()
+    # ret, imgDecode = cap.read()
+    imageURL = requests.get(url)
+    imageArray = np.frombuffer(bytearray(imageURL.content), dtype=np.uint8)
+    imgDecode = cv2.imdecode(imageArray, cv2.IMREAD_COLOR)
 
     detactions = model.predict(source=imgDecode, imgsz=480)[0]
 
